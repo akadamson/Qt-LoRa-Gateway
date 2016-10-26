@@ -2,7 +2,7 @@
 Qt based serial LoRa Gateway
 
 History:
-2016-10-25: Initial commit
+2016-10-25: Initial commit - Windows prebuilt binary included in zipfile
 
 inspired and most logic cloned from https://github.com/daveake/LoRaSerialGateway
 
