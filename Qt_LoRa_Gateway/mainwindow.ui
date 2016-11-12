@@ -342,7 +342,7 @@
      </font>
     </property>
     <property name="text">
-     <string>&amp;Spreading:</string>
+     <string>S&amp;preading:</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -1036,11 +1036,20 @@
    </property>
    <widget class="QMenu" name="menuSetup">
     <property name="title">
-     <string>Setup</string>
+     <string>&amp;Setup</string>
     </property>
     <addaction name="actionSerialPort"/>
    </widget>
+   <widget class="QMenu" name="menuWindows">
+    <property name="title">
+     <string>&amp;Windows</string>
+    </property>
+    <addaction name="actionHistory"/>
+    <addaction name="separator"/>
+    <addaction name="actionSSDV"/>
+   </widget>
    <addaction name="menuSetup"/>
+   <addaction name="menuWindows"/>
   </widget>
   <action name="actionSerialPort">
    <property name="text">
@@ -1050,6 +1059,16 @@
     <font>
      <pointsize>8</pointsize>
     </font>
+   </property>
+  </action>
+  <action name="actionHistory">
+   <property name="text">
+    <string>History</string>
+   </property>
+  </action>
+  <action name="actionSSDV">
+   <property name="text">
+    <string>SSDV</string>
    </property>
   </action>
  </widget>

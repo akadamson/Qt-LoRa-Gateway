@@ -18,12 +18,22 @@ TEMPLATE = app
 SOURCES += main.cpp\
 mainwindow.cpp \
     serialbase.cpp \
-    serialdialog.cpp
+    serialdialog.cpp \
+    dlghistory.cpp \
+    dlgssdv.cpp \
+    rs8.c \
+    ssdv.c
 
 HEADERS  += mainwindow.h \
     serialbase.h \
     serialdialog.h \
-    threadwrapper.h
+    threadwrapper.h \
+    dlghistory.h \
+    dlgssdv.h \
+    rs8.h \
+    ssdv.h
 
 FORMS    += mainwindow.ui \
-    serialdialog.ui
+    serialdialog.ui \
+    dlghistory.ui \
+    dlgssdv.ui

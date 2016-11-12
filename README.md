@@ -2,8 +2,9 @@
 Qt based serial LoRa Gateway
 
 History:
-2016-10-26: Removed debugging code in initial version and rebuilt
-2016-10-25: Initial commit - Windows prebuilt binary included in zipfile
+* 2016-11-12: Added a Debug History window, SSDV display window, and Window menu item.  SSDV display will be scaled to 320x240 for now, I'll fix this in a later version.  Both Debug History and SSDV are live from program start and do not require the upload check box to be set.  History window is structured in sysylogd format
+* 2016-10-26: Removed debugging code in initial version and rebuilt
+* 2016-10-25: Initial commit - Windows prebuilt binary included in zipfile
 
 Inspired and most logic cloned from https://github.com/daveake/LoRaSerialGateway
 
@@ -18,7 +19,7 @@ To utilize, you need an arduino like board with LoRa module and Daves other code
 NOTE: For me this was easiest to do using an Adafruit Feather with LoRa:  To utilize change _slaveSelectPin = 8, and dio5 = 10.  Then jumper, D10 on the feather to the IO5 pin next to the LoRa module.  Program the Arduino with these changes, and use the QT gateway code to connect to the serial port that the arduino will present.
 
 KNOWN ISSUES:
-a) The SSDV upload is a one frame at a time, I modified it for 3 frames at a time, but it seemed
+a) The SSDV upload is one frame at a time, I modified it for 3 frames at a time, but it seemed
 too fragile and I didn't spend any more time with it
 b) The serial support is way overkill, it could be tuned to reduce the memory footprint, but again
 it works so I didn't mess with it.

@@ -10,6 +10,8 @@
 #include <QNetworkAccessManager>
 
 #include "serialbase.h"
+#include "dlghistory.h"
+#include "dlgssdv.h"
 
 #define A_THREAD
 
@@ -29,6 +31,8 @@ private slots:
 	void closeEvent(QCloseEvent *event);
 	void OnTimer();
 	void OnSerialDlg();
+    void onHistoryDlg();
+    void onSSDVDlg();
 	void OnNewPortStatus(int portstatus);
 	void OnNewRxData(quint8* pData, int numbytes);	//slot got new data from serial port
     void on_pushButton_released();
@@ -46,6 +50,8 @@ private:
 	tSerialSettings m_PortSettings;
 
 	//non-persistant local variables
+    dlgHistory *historyDlg = NULL;
+    dlgSSDV *SSDVDlg = NULL;
     bool _closing = false;
 	CSerialBase* m_pSerialBase;
 	QTimer *m_pTimer;

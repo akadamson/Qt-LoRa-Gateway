@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "serialdialog.h"
+#include "dlghistory.h"
+#include "dlgssdv.h"
 
 #include <QSettings>
 #include <QtDebug>
@@ -12,7 +14,9 @@
 #include <QtConcurrent/QtConcurrentRun>
 #include <QThread>
 
-#define PROGRAM_TITLE_VERSION "LoRa Serial/Bluetooth Gateway 1.2qt"
+#define PROGRAM_TITLE_VERSION "LoRa Serial/Bluetooth Gateway 1.3qt"
+
+//#define DBG(string) historyDlg->addItem(string)
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -26,6 +30,13 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_pSerialBase = new CSerialBase();
     lstCommands = new QStringList();
 
+    historyDlg = new dlgHistory(this);
+    historyDlg->setFixedSize(591, 500);
+
+    SSDVDlg = new dlgSSDV(this);
+    SSDVDlg->setFixedSize(480, 420);
+    //SSDVDlg->setModal(false);
+
     //m_pSerialBase->Flush();
 
 	//read persistant settings from registry
@@ -33,6 +44,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	//connect serial setup menu button
 	connect(ui->actionSerialPort, SIGNAL( triggered() ), this, SLOT( OnSerialDlg() ) );
+
+    connect(ui->actionHistory, SIGNAL(triggered()), this, SLOT(onHistoryDlg()));
+    connect(ui->actionSSDV, SIGNAL(triggered()), this, SLOT(onSSDVDlg()));
 
 	//setup a status timer
 	m_pTimer = new QTimer(this);
@@ -70,6 +84,11 @@ MainWindow::~MainWindow()
     delete lstCommands;
 
 	delete ui;
+
+    delete historyDlg;
+
+    if (SSDVDlg)
+        delete SSDVDlg;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -153,6 +172,16 @@ void MainWindow::OnSerialDlg()
 		m_PortSettings = dlg.m_PortSettings;
 	}
 	m_pSerialBase->OpenPort(m_PortSettings);
+}
+
+void MainWindow::onHistoryDlg()
+{
+    historyDlg->show();
+}
+
+void MainWindow::onSSDVDlg()
+{
+    SSDVDlg->show();
 }
 
 /////////////////////////////////////////////////////////////
@@ -289,7 +318,7 @@ qDebug() << "Success posting telemetry" << "[" << reply->readAll() << "]";
     else
     {
 qDebug() << "Failure posting telmetry" << reply->errorString() << "[" << reply->readAll() << "]";
-       //ui->resultsList->addItem("ERROR: Failure posting telemetry");
+       historyDlg->addItem("[ERROR] : Failure posting telemetry");
     }
 #endif
     reply->deleteLater();
@@ -356,7 +385,7 @@ qDebug() << "Success posting SSDV" << "[" << reply->readAll() << "]";
     else
     {
 qDebug() << "Failure posting SSDV" << reply->errorString() << "[" << reply->readAll() << "]";
-       //ui->resultsList->addItem("ERROR: Failure posting SSDV");
+       historyDlg->addItem("[ERROR] : Failure posting SSDV");
     }
 #endif
     reply->deleteLater();
@@ -372,51 +401,71 @@ void MainWindow::processLine(QString line)
     {
         ui->currentRSSI->setText(line.mid(line.indexOf("=") + 1) + "dBm");
     }
+    else if (!QString::compare(Command, "ERROR"))
+    {
+        historyDlg->addItem(line.mid(line.indexOf("=") + 1));
+    }
     else if (!QString::compare(Command, "MESSAGE"))
     {
 //qDebug() << line.mid(line.indexOf("=") + 1);
-        ui->resultsList->addItem(line.mid(line.indexOf("=") + 1));
-        ui->rxSentenceCount->setText(QString::number(ui->rxSentenceCount->text().toInt() + 1));
-
-        if (ui->cbUploadToHab->isChecked())
-        {
-            if (!alreadyChecked)
-            {
-                alreadyChecked = true;
-                outputQue_p = ui->rxSentenceCount->text().toInt() + ui->ssdvCount->text().toInt() - 1;
-            }
-
-            outputQueEnd_p = ui->rxSentenceCount->text().toInt() + ui->ssdvCount->text().toInt();
-            rxSentenceQueCount++;
-            updateQueCounts();
-        }
-        else
-        {
-            alreadyChecked = false;
-        }
-    }
-    else if (!QString::compare(Command, "HEX"))
-    {
-        if (!QString::compare(line.mid(line.indexOf("=") + 1).left(2), "66") || !QString::compare(line.mid(line.indexOf("=") + 1).left(2), "E6"))
+        if (line.mid(line.indexOf("=") + 1).length() > 5)
         {
             ui->resultsList->addItem(line.mid(line.indexOf("=") + 1));
-            ui->ssdvCount->setText(QString::number(ui->ssdvCount->text().toInt() + 1));
+            ui->rxSentenceCount->setText(QString::number(ui->rxSentenceCount->text().toInt() + 1));
 
             if (ui->cbUploadToHab->isChecked())
             {
                 if (!alreadyChecked)
                 {
                     alreadyChecked = true;
-                    outputQue_p = ui->ssdvCount->text().toInt() + ui->rxSentenceCount->text().toInt() - 1;
+                    outputQue_p = ui->rxSentenceCount->text().toInt() + ui->ssdvCount->text().toInt() - 1;
                 }
 
-                outputQueEnd_p = ui->ssdvCount->text().toInt() + ui->rxSentenceCount->text().toInt();
-                ssdvQueCount++;
+                outputQueEnd_p = ui->rxSentenceCount->text().toInt() + ui->ssdvCount->text().toInt();
+                rxSentenceQueCount++;
                 updateQueCounts();
             }
             else
             {
                 alreadyChecked = false;
+            }
+        }
+        else
+        {
+            historyDlg->addItem("[INFO] : MESSAGE too short");
+        }
+    }
+    else if (!QString::compare(Command, "HEX"))
+    {
+        if (!QString::compare(line.mid(line.indexOf("=") + 1).left(2), "66") || !QString::compare(line.mid(line.indexOf("=") + 1).left(2), "E6"))
+        {
+            if (line.mid(line.indexOf("=") + 1).length() > 5)
+            {
+                ui->resultsList->addItem(line.mid(line.indexOf("=") + 1));
+                ui->ssdvCount->setText(QString::number(ui->ssdvCount->text().toInt() + 1));
+
+                if (ui->cbUploadToHab->isChecked())
+                {
+                    if (!alreadyChecked)
+                    {
+                        alreadyChecked = true;
+                        outputQue_p = ui->ssdvCount->text().toInt() + ui->rxSentenceCount->text().toInt() - 1;
+                    }
+
+                    outputQueEnd_p = ui->ssdvCount->text().toInt() + ui->rxSentenceCount->text().toInt();
+                    ssdvQueCount++;
+                    updateQueCounts();
+                }
+                else
+                {
+                    alreadyChecked = false;
+                }
+
+                SSDVDlg->ssdvDecode("55" + line.mid(line.indexOf("=") + 1).toUtf8());
+            }
+            else
+            {
+                historyDlg->addItem("[INFO] : HEX too short");
             }
         }
     }
